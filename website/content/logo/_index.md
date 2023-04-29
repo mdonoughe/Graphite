@@ -19,7 +19,7 @@ The Graphite logo is not part of the software's Apache 2.0 license. Users of the
 
 1. Do not use the Graphite logo as your own. It should not be used as your primary, or most visually prominent, branding. Your usage should not imply that it's a part of the official Graphite project, nor that it's endorsed or affiliated.
 2. Only use the logo when talking about, describing, referencing, or crediting the official Graphite project or software. If used as a hyperlink, it should point only to <https://graphite.rs>.
-3. Do not modify the logo. Only the solid-colored version may be recolored if necessary, but this is discouraged.
+3. Do not modify the logo. The solid-colored version may only be recolored with another solid color if doing so is necessary for visual consistency when presented alongside other logos of the same color. Sufficient blank space should be preserved around the logo so it does not compete with overlapping design elements.
 4. Commercial use of the logo (for example, merchandise sales) is not allowed without permission.
 
 If in doubt, please send an email to <contact@graphite.rs> for permission.

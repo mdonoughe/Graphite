@@ -491,7 +491,7 @@ fn static_nodes() -> Vec<DocumentNodeType> {
 				name: "Frame",
 				data_type: FrontendGraphDataType::Raster,
 			}],
-			properties: |_document_node, _node_id, _context| node_properties::string_properties("The graph's output is drawn in the layer"),
+			properties: |_document_node, _node_id, _context| node_properties::string_properties("Consumes the scope opened by the Begin Scope node and evaluates the contained node network"),
 			..Default::default()
 		},
 		DocumentNodeType {
