@@ -33,16 +33,38 @@ impl DocumentNodeMetadata {
 	}
 }
 
-#[derive(Clone, Debug, PartialEq, Hash, DynAny, Default)]
+/// Utility function for providing a default boolean value to serde.
+#[inline(always)]
+fn return_true() -> bool {
+	true
+}
+
+#[derive(Clone, Debug, PartialEq, Hash, DynAny)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DocumentNode {
 	pub name: String,
 	pub inputs: Vec<NodeInput>,
+	#[serde(default = "return_true")]
+	pub has_primary_output: bool,
 	pub implementation: DocumentNodeImplementation,
 	pub metadata: DocumentNodeMetadata,
 	#[serde(default)]
 	pub skip_deduplication: bool,
 	pub path: Option<Vec<NodeId>>,
+}
+
+impl Default for DocumentNode {
+	fn default() -> Self {
+		Self {
+			name: Default::default(),
+			inputs: Default::default(),
+			has_primary_output: true,
+			implementation: Default::default(),
+			metadata: Default::default(),
+			skip_deduplication: Default::default(),
+			path: Default::default(),
+		}
+	}
 }
 
 impl DocumentNode {
@@ -172,20 +194,18 @@ impl DocumentNode {
 #[derive(Debug, Clone, PartialEq, Hash, DynAny)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum NodeInput {
-	Node {
-		node_id: NodeId,
-		output_index: usize,
-		lambda: bool,
-	},
-	Value {
-		tagged_value: TaggedValue,
-		exposed: bool,
-	},
+	/// A reference to another node in the same network from which this node can receive its input.
+	Node { node_id: NodeId, output_index: usize, lambda: bool },
+	/// A hardcoded value that can't change after the graph is compiled. Gets converted into a value node during graph compilation.
+	Value { tagged_value: TaggedValue, exposed: bool },
+	/// Input that is provided by the parent network to this document node, instead of from a hardcoded value or another node within the same network.
 	Network(Type),
 	/// A short circuting input represents an input that is not resolved through function composition
 	/// but actually consuming the provided input instead of passing it to its predecessor.
 	/// See [NodeInput] docs for more explanation.
 	ShortCircut(Type),
+	/// A Rust source code string. Allows us to insert literal Rust code. Only used for GPU compilation.
+	/// We can use this whenever we spin up Rustc. Sort of like inline assembly, but because our language is Rust, it acts as inline Rust.
 	Inline(InlineRust),
 }
 
