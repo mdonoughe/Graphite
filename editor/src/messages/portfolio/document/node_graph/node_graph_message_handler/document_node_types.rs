@@ -661,9 +661,9 @@ fn static_nodes() -> Vec<DocumentNodeBlueprint> {
 			..Default::default()
 		},
 		DocumentNodeBlueprint {
-			name: "Grayscale",
+			name: "Black & White",
 			category: "Image Adjustments",
-			identifier: NodeImplementation::proto("graphene_core::raster::GrayscaleNode<_, _, _, _, _, _, _>"),
+			identifier: NodeImplementation::proto("graphene_core::raster::BlackAndWhiteNode<_, _, _, _, _, _, _>"),
 			inputs: vec![
 				DocumentInputType {
 					name: "Image",
