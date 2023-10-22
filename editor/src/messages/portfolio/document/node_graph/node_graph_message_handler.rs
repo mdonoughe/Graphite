@@ -121,6 +121,7 @@ pub struct NodeGraphMessageHandler {
 	pub layer_path: Option<Vec<LayerId>>,
 	pub network: Vec<NodeId>,
 	has_selection: bool,
+	graph_open: bool,
 	#[serde(skip)]
 	pub widgets: [LayoutGroup; 2],
 }
@@ -360,8 +361,10 @@ impl NodeGraphMessageHandler {
 		if reconnect {
 			// Check whether the being-deleted node's first (primary) input is a node
 			if let Some(node) = network.nodes.get(&deleting_node_id) {
-				if matches!(node.inputs.first(), Some(NodeInput::Node { .. })) {
-					first_input_node = Some(node.inputs[0].clone());
+				// Reconnect to the node below when deleting a layer node.
+				let index = if node.name == "Layer" { 7 } else { 0 };
+				if matches!(&node.inputs.get(index), Some(NodeInput::Node { .. })) {
+					first_input_node = Some(node.inputs[index].clone());
 				}
 			}
 		}
@@ -445,6 +448,7 @@ pub struct NodeGraphHandlerData<'a> {
 	pub document_id: u64,
 	pub document_name: &'a str,
 	pub input: &'a InputPreprocessorMessageHandler,
+	pub graph_open: bool,
 }
 
 impl<'a> MessageHandler<NodeGraphMessage, NodeGraphHandlerData<'a>> for NodeGraphMessageHandler {
@@ -489,7 +493,6 @@ impl<'a> MessageHandler<NodeGraphMessage, NodeGraphHandlerData<'a>> for NodeGrap
 					error!("Failed to find actual index of connector index {input_node_connector_index} on node {input_node:#?}");
 					return;
 				};
-				document.metadata.load_structure(&document.document_network);
 				responses.add(DocumentMessage::DocumentStructureChanged);
 
 				responses.add(DocumentMessage::StartTransaction);
@@ -787,7 +790,11 @@ impl<'a> MessageHandler<NodeGraphMessage, NodeGraphHandlerData<'a>> for NodeGrap
 			NodeGraphMessage::SetNodeInput { node_id, input_index, input } => {
 				if let Some(network) = document.document_network.nested_network_mut(&self.network) {
 					if let Some(node) = network.nodes.get_mut(&node_id) {
-						node.inputs[input_index] = input
+						let structure_changed = node.inputs[input_index].as_node().is_some() || input.as_node().is_some();
+						node.inputs[input_index] = input;
+						if structure_changed {
+							document.metadata.load_structure(&document.document_network);
+						}
 					}
 				}
 			}
@@ -937,10 +944,11 @@ impl<'a> MessageHandler<NodeGraphMessage, NodeGraphHandlerData<'a>> for NodeGrap
 			}
 		}
 		self.has_selection = document.metadata.has_selected_nodes();
+		self.graph_open = data.graph_open;
 	}
 
 	fn actions(&self) -> ActionList {
-		if self.has_selection {
+		if self.has_selection && self.graph_open {
 			actions!(NodeGraphMessageDiscriminant; DeleteSelectedNodes, Cut, Copy, DuplicateSelectedNodes, ToggleHidden)
 		} else {
 			actions!(NodeGraphMessageDiscriminant;)
